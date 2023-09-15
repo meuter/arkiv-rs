@@ -2,9 +2,9 @@ name: Clippy
 
 on: [push, pull_request]
 
-# Make sure CI fails on all warnings, including Clippy lints
 env:
-  RUSTFLAGS: "-Dwarnings"
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings" # Make sure CI fails on all warnings, including Clippy lints
 
 jobs:
   clippy_check:
