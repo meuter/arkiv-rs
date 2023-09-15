@@ -1,0 +1,29 @@
+name: Build
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --verbose
+      - name: Build each features
+        run: |
+          cargo build --no-default-features --verbose
+          cargo build --no-default-features --features bzip --verbose
+          cargo build --no-default-features --features gzip --verbose
+          cargo build --no-default-features --features tar --verbose
+          cargo build --no-default-features --features xz --verbose
+          cargo build --no-default-features --features zip --verbose
+      - name: Run tests
+        run: cargo test --verbose
