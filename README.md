@@ -7,6 +7,8 @@
 Thin convenience library to manupulate compressed archive of vairous types
 through a single interface.
 
+## Usage
+
 ```rust
 fn main() -> Result<()> {
     let archive = arkiv::Archive::open("/path/to/archive.tar.xz")?;
@@ -15,6 +17,3 @@ fn main() -> Result<()> {
 }
 ```
 
-## Disclaimer
-
-This is a work in progress and is not publishes on crates.io yet...
