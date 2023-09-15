@@ -1,6 +1,6 @@
 [package]
 name = "arkiv"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Cédric Meuter <cedric.meuter@gmail.com>"]
 description = "library providing convenience function to manipulate various kind of archive (zip, tar.gz, tar.xz, ... )"
