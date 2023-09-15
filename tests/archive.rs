@@ -40,3 +40,39 @@ mod test_unpack {
         test("tests/sample/sample.tar.xz")
     }
 }
+
+mod test_entries {
+    use super::*;
+
+    fn test(path: impl AsRef<Path>) -> Result<()> {
+        let mut archive = Archive::open(path)?;
+        let mut actual = archive.entries()?;
+        let mut expected = vec!["sample/".to_string(), "sample/sample.txt".to_string()];
+
+        actual.sort();
+        expected.sort();
+
+        assert_eq!(actual, expected);
+        Ok(())
+    }
+
+    #[test]
+    fn tar_zipped_archive() -> Result<()> {
+        test("tests/sample/sample.zip")
+    }
+
+    #[test]
+    fn tar_gzipped_archive() -> Result<()> {
+        test("tests/sample/sample.tar.gz")
+    }
+
+    #[test]
+    fn tar_bzipped_archive() -> Result<()> {
+        test("tests/sample/sample.tar.bz2")
+    }
+
+    #[test]
+    fn tar_xzipped_archive() -> Result<()> {
+        test("tests/sample/sample.tar.xz")
+    }
+}

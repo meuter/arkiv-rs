@@ -4,28 +4,44 @@ use std::{
     path::Path,
 };
 
+pub type Error = std::io::Error;
+pub type Result<T> = std::io::Result<T>;
+
 trait Archived {
-    fn unpack(&mut self, dest: &Path) -> std::io::Result<()>;
+    fn unpack(&mut self, dest: &Path) -> Result<()>;
+    fn entries(&mut self) -> Result<Vec<String>>;
 }
 
 #[cfg(feature = "zip")]
 impl<R: Read + Seek> Archived for zip::ZipArchive<R> {
-    fn unpack(&mut self, dest: &Path) -> std::io::Result<()> {
+    fn unpack(&mut self, dest: &Path) -> Result<()> {
         Ok(self.extract(dest)?)
+    }
+
+    fn entries(&mut self) -> Result<Vec<String>> {
+        let files = self.file_names().map(|e| e.into()).collect();
+        Ok(files)
     }
 }
 
 #[cfg(feature = "tar")]
 impl<R: Read> Archived for tar::Archive<R> {
-    fn unpack(&mut self, dest: &Path) -> std::io::Result<()> {
+    fn unpack(&mut self, dest: &Path) -> Result<()> {
         self.unpack(dest)
+    }
+
+    fn entries(&mut self) -> Result<Vec<String>> {
+        let files = tar::Archive::entries(self)?
+            .map(|e| e.unwrap().path().unwrap().to_str().unwrap().into())
+            .collect();
+        Ok(files)
     }
 }
 
 pub struct Archive(Box<dyn Archived>);
 
 impl Archive {
-    pub fn open(path: impl AsRef<Path>) -> std::io::Result<Self> {
+    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let mut magic = [0u8; 2];
         let mut file = File::open(&path)?;
         file.read_exact(&mut magic)?;
@@ -50,7 +66,11 @@ impl Archive {
         }
     }
 
-    pub fn unpack(&mut self, dest: impl AsRef<Path>) -> std::io::Result<()> {
+    pub fn entries(&mut self) -> Result<Vec<String>> {
+        self.0.entries()
+    }
+
+    pub fn unpack(&mut self, dest: impl AsRef<Path>) -> Result<()> {
         self.0.unpack(dest.as_ref())
     }
 }
