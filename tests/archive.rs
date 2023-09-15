@@ -67,6 +67,11 @@ mod test_entries {
     }
 
     #[test]
+    fn tar_gzipped_archive2() -> Result<()> {
+        test("tests/sample/sample.tgz")
+    }
+
+    #[test]
     fn tar_bzipped_archive() -> Result<()> {
         test("tests/sample/sample.tar.bz2")
     }
