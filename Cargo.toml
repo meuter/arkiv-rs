@@ -1,6 +1,6 @@
 [package]
 name = "arkiv"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Cédric Meuter <cedric.meuter@gmail.com>"]
 description = "library providing convenience function to manipulate various kind of archive (zip, tar.gz, tar.xz, ... )"
@@ -15,6 +15,7 @@ bzip2 = { version = "0.4", optional = true }
 flate2 = { version = "1.0", optional = true }
 tar = { version = "0.4", optional = true }
 xz2 = { version = "0.1", optional = true }
+zstd = { version = "0.12", optional = true }
 
 [dependencies.zip]
 version = "0.6"
@@ -23,12 +24,10 @@ features = ["deflate", "time"]
 optional = true
 
 [features]
-default = ["all"]
-all = ["bzip", "gzip", "tar", "xz", "zip"]
-bzip = ["bzip2", "zip/bzip2"]
+default = ["zip", "tar", "gzip", "xz", "bzip", "zstd"]
+bzip = ["bzip2"]
 gzip = ["flate2"]
 xz = ["xz2"]
-zip-all = ["zip", "zip/bzip2"]
 
 [dev-dependencies]
 tempfile = "3.8.0"

@@ -61,6 +61,11 @@ impl Archive {
                 xz2::read::XzDecoder::new(_file),
             )))),
 
+            #[cfg(all(feature = "zstd", feature = "tar"))]
+            ArchiveKind::TarZstd => Ok(Archive(Box::new(tar::Archive::new(
+                zstd::stream::Decoder::new(_file)?,
+            )))),
+
             _ => Err(ErrorKind::Other.into()),
         }
     }
@@ -81,11 +86,13 @@ pub enum ArchiveKind {
     Zip,
     Tar,
     Gzip,
+    Zstd,
     Bzip2,
     Xz2,
     TarGzip,
     TarBzip2,
     TarXz2,
+    TarZstd,
     Unknown,
 }
 
@@ -123,12 +130,16 @@ impl ArchiveKind {
             ArchiveKind::TarXz2
         } else if match_ext!(path, "tar", "bz2") {
             ArchiveKind::TarBzip2
+        } else if match_ext!(path, "tar", "zstd") || match_ext!(path, "tar", "zst") {
+            ArchiveKind::TarZstd
         } else if match_ext!(path, "gz") {
             ArchiveKind::Gzip
         } else if match_ext!(path, "xz") {
             ArchiveKind::Xz2
         } else if match_ext!(path, "bz2") {
             ArchiveKind::Bzip2
+        } else if match_ext!(path, "zstd") || match_ext!(path, "zst") {
+            ArchiveKind::Zstd
         } else {
             ArchiveKind::Unknown
         }
@@ -156,10 +167,14 @@ mod test {
         assert_ext!("sample.tgz", ArchiveKind::TarGzip);
         assert_ext!("sample.tar.xz", ArchiveKind::TarXz2);
         assert_ext!("sample.tar.bz2", ArchiveKind::TarBzip2);
+        assert_ext!("sample.tar.zstd", ArchiveKind::TarZstd);
+        assert_ext!("sample.tar.zst", ArchiveKind::TarZstd);
         assert_ext!("sample.xz", ArchiveKind::Xz2);
         assert_ext!("sample.bz2", ArchiveKind::Bzip2);
         assert_ext!("sample.exe", ArchiveKind::Unknown);
         assert_ext!("sample.txt.gz", ArchiveKind::Gzip);
+        assert_ext!("sample.txt.zstd", ArchiveKind::Zstd);
+        assert_ext!("sample.txt.zst", ArchiveKind::Zstd);
         Ok(())
     }
 }

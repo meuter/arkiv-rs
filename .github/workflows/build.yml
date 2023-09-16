@@ -27,4 +27,5 @@ jobs:
           cargo build --no-default-features -F gzip
           cargo build --no-default-features -F tar
           cargo build --no-default-features -F xz
+          cargo build --no-default-features -F zstd
           cargo build --no-default-features -F zip

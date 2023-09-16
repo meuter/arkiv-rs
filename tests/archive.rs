@@ -7,6 +7,7 @@ type Result<T> = std::result::Result<T, Error>;
 mod test_unpack {
     use super::*;
 
+    #[allow(unused)]
     fn test(path: impl AsRef<Path>) -> Result<()> {
         let sandbox = tempfile::tempdir()?;
         let mut archive = Archive::open(path)?;
@@ -21,29 +22,42 @@ mod test_unpack {
     }
 
     #[test]
-    fn tar_zipped_archive() -> Result<()> {
+    #[cfg(feature = "zip")]
+    fn zip_archive() -> Result<()> {
         test("tests/sample/sample.zip")
     }
 
     #[test]
-    fn tar_gzipped_archive() -> Result<()> {
-        test("tests/sample/sample.tar.gz")
+    #[cfg(all(feature = "gzip", feature = "tar"))]
+    fn tar_gz_archive() -> Result<()> {
+        test("tests/sample/sample.tar.gz")?;
+        test("tests/sample/sample.tgz")
     }
 
     #[test]
-    fn tar_bzipped_archive() -> Result<()> {
+    #[cfg(all(feature = "bzip", feature = "tar"))]
+    fn tar_bz2_archive() -> Result<()> {
         test("tests/sample/sample.tar.bz2")
     }
 
     #[test]
-    fn tar_xzipped_archive() -> Result<()> {
+    #[cfg(all(feature = "xz", feature = "tar"))]
+    fn tar_xz_archive() -> Result<()> {
         test("tests/sample/sample.tar.xz")
+    }
+
+    #[test]
+    #[cfg(all(feature = "zstd", feature = "tar"))]
+    fn tar_zst_archive() -> Result<()> {
+        test("tests/sample/sample.tar.zstd")?;
+        test("tests/sample/sample.tar.zst")
     }
 }
 
 mod test_entries {
     use super::*;
 
+    #[allow(unused)]
     fn test(path: impl AsRef<Path>) -> Result<()> {
         let mut archive = Archive::open(path)?;
         let mut actual = archive.entries()?;
@@ -57,27 +71,34 @@ mod test_entries {
     }
 
     #[test]
-    fn tar_zipped_archive() -> Result<()> {
+    #[cfg(feature = "zip")]
+    fn zip_archive() -> Result<()> {
         test("tests/sample/sample.zip")
     }
 
     #[test]
-    fn tar_gzipped_archive() -> Result<()> {
-        test("tests/sample/sample.tar.gz")
-    }
-
-    #[test]
-    fn tar_gzipped_archive2() -> Result<()> {
+    #[cfg(all(feature = "gzip", feature = "tar"))]
+    fn tar_gz_archive() -> Result<()> {
+        test("tests/sample/sample.tar.gz")?;
         test("tests/sample/sample.tgz")
     }
 
     #[test]
-    fn tar_bzipped_archive() -> Result<()> {
+    #[cfg(all(feature = "bzip", feature = "tar"))]
+    fn tar_bz2_archive() -> Result<()> {
         test("tests/sample/sample.tar.bz2")
     }
 
     #[test]
-    fn tar_xzipped_archive() -> Result<()> {
+    #[cfg(all(feature = "xz", feature = "tar"))]
+    fn tar_xz_archive() -> Result<()> {
         test("tests/sample/sample.tar.xz")
+    }
+
+    #[test]
+    #[cfg(all(feature = "zstd", feature = "tar"))]
+    fn tar_zstd_archive() -> Result<()> {
+        test("tests/sample/sample.tar.zstd")?;
+        test("tests/sample/sample.tar.zst")
     }
 }

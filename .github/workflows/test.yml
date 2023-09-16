@@ -8,13 +8,22 @@ env:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v2
-      - name: Run tests
+      - name: Test with default feature
         run: cargo test
-
+      - name: Test with all features
+        run: cargo test
+      - name: Test without any feature
+        run: cargo test --no-default-features
+      - name: Test each features individually
+        run: |
+          cargo test --no-default-features -F bzip
+          cargo test --no-default-features -F gzip
+          cargo test --no-default-features -F tar
+          cargo test --no-default-features -F xz
+          cargo test --no-default-features -F zstd
+          cargo test --no-default-features -F zip

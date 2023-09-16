@@ -1,0 +1,129 @@
+[tasks.ci]
+dependencies = ["build", "test", "lint"]
+
+###############################################################################
+# build all variants
+###############################################################################
+[tasks.build-default-features]
+command = "cargo"
+args = ["build"]
+
+[tasks.build-no-default-features]
+command = "cargo"
+args = ["build", "--no-default-features"]
+
+[tasks.build-all-features]
+command = "cargo"
+args = ["build", "--all-features"]
+
+[tasks.build-zip-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "zip"]
+
+[tasks.build-tar-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "tar"]
+
+[tasks.build-gzip-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "gzip"]
+
+[tasks.build-xz-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "xz"]
+
+[tasks.build-bzip-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "bzip"]
+
+[tasks.build-zstd-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "zstd"]
+
+[tasks.build]
+dependencies = [
+    "build-default-features",
+    "build-no-default-features",
+    "build-all-features",
+    "build-zip-only",
+    "build-tar-only",
+    "build-gzip-only",
+    "build-xz-only",
+    "build-bzip-only",
+    "build-zstd-only",
+]
+
+###############################################################################
+# test all variants
+###############################################################################
+[tasks.test-default-features]
+command = "cargo"
+args = ["test", "-q"]
+
+[tasks.test-no-default-features]
+command = "cargo"
+args = ["test", "-q", "--no-default-features"]
+
+[tasks.test-all-features]
+command = "cargo"
+args = ["test", "-q", "--all-features"]
+
+[tasks.test-zip-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "zip"]
+
+[tasks.test-tar-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "tar"]
+
+[tasks.test-gzip-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "gzip", "-F", "tar"]
+
+[tasks.test-xz-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "xz", "-F", "tar"]
+
+[tasks.test-bzip-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "bzip", "-F", "tar"]
+
+[tasks.test-zstd-only]
+command = "cargo"
+args = ["test", "-q", "--no-default-features", "-F", "zstd", "-F", "tar"]
+
+[tasks.test]
+dependencies = [
+    "test-default-features",
+    "test-no-default-features",
+    "test-all-features",
+    "test-zip-only",
+    "test-tar-only",
+    "test-gzip-only",
+    "test-xz-only",
+    "test-bzip-only",
+    "test-zstd-only",
+]
+
+###############################################################################
+# lint
+###############################################################################
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features"]
+
+[tasks.audit]
+command = "cargo"
+args = ["audit"]
+
+[tasks.publish-dry-run]
+command = "cargo"
+args = ["publish", "--dry-run"]
+
+[tasks.package-list]
+command = "cargo"
+args = ["package", "--list"]
+
+[tasks.lint]
+dependencies = ["clippy", "audit", "publish-dry-run", "package-list"]
