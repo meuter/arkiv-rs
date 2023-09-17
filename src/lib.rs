@@ -1,3 +1,6 @@
+#![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
+
+
 use std::{fs::File, io::ErrorKind, path::Path};
 
 pub type Error = std::io::Error;

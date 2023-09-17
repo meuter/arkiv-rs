@@ -9,15 +9,26 @@
 [![Build](https://github.com/meuter/arkiv-rs/actions/workflows/test.yml/badge.svg)](https://github.com/meuter/arkiv-rs/actions/workflows/test.yml)
 [![Clippy](https://github.com/meuter/arkiv-rs/actions/workflows/clippy.yml/badge.svg)](https://github.com/meuter/arkiv-rs/actions/workflows/clippy.yml)
 
-Thin convenience library to manupulate compressed archive of vairous types
+Arkiv is a convenience library to open, consult and extract archives of various format
 through a single interface.
 
 ## Usage
 
-```rust
+```no_run
+use arkiv::{Result, Archive};
+
 fn main() -> Result<()> {
-    let archive = arkiv::Archive::open("/path/to/archive.tar.xz")?;
+    // open the archive
+    let mut archive = arkiv::Archive::open("path/to/archive.tar.xz")?;
+
+    // iterate over entries
+    for entry in archive.entries()? {
+        println!("{entry}");
+    }
+
+    // extract the archive (perserves permission on unix targets)
     archive.unpack("/tmp/")?;
+
     Ok(())
 }
 ```
