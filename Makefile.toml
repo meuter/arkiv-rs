@@ -58,39 +58,39 @@ dependencies = [
 ###############################################################################
 [tasks.test-default-features]
 command = "cargo"
-args = ["test", "-q"]
+args = ["test"]
 
 [tasks.test-no-default-features]
 command = "cargo"
-args = ["test", "-q", "--no-default-features"]
+args = ["test", "--no-default-features"]
 
 [tasks.test-all-features]
 command = "cargo"
-args = ["test", "-q", "--all-features"]
+args = ["test", "--all-features"]
 
 [tasks.test-zip-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "zip"]
+args = ["test", "--no-default-features", "-F", "zip"]
 
 [tasks.test-tar-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "tar"]
+args = ["test", "--no-default-features", "-F", "tar"]
 
 [tasks.test-gzip-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "gzip", "-F", "tar"]
+args = ["test", "--no-default-features", "-F", "gzip", "-F", "tar"]
 
 [tasks.test-xz-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "xz", "-F", "tar"]
+args = ["test", "--no-default-features", "-F", "xz", "-F", "tar"]
 
 [tasks.test-bzip-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "bzip", "-F", "tar"]
+args = ["test", "--no-default-features", "-F", "bzip", "-F", "tar"]
 
 [tasks.test-zstd-only]
 command = "cargo"
-args = ["test", "-q", "--no-default-features", "-F", "zstd", "-F", "tar"]
+args = ["test", "--no-default-features", "-F", "zstd", "-F", "tar"]
 
 [tasks.test]
 dependencies = [
@@ -111,7 +111,7 @@ dependencies = [
 
 [tasks.clippy]
 command = "cargo"
-args = ["clippy", "--all-targets", "--all-features"]
+args = ["clippy", "--all-targets", "--all-features", "--tests"]
 
 [tasks.audit]
 command = "cargo"
