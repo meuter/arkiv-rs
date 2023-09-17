@@ -1,39 +1,39 @@
 use std::path::Path;
 
-/// available archive file formats.
+/// Available archive file formats.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Format {
-    /// compressed zip archive
+    /// Compressed zip archive
     Zip,
 
-    /// uncompressed tar archive
+    /// Uncompressed tar archive
     Tar,
 
-    /// file comressed with Gzip
+    /// File comressed with Gzip
     Gzip,
 
-    /// file compressed with Zstd
+    /// File compressed with Zstd
     Zstd,
 
-    /// file compressed with Bzip2
+    /// File compressed with Bzip2
     Bzip2,
 
-    /// file compressed with Xz2
+    /// File compressed with Xz2
     Xz2,
 
-    /// tar archive compressed with Gzip
+    /// Tar archive compressed with Gzip
     TarGzip,
 
-    /// tar archive compressed with Bzip2
+    /// Tar archive compressed with Bzip2
     TarBzip2,
 
-    /// tar archive compressed with Xz2
+    /// Tar archive compressed with Xz2
     TarXz2,
 
-    /// tar archive compressed with Zstd
+    /// Tar archive compressed with Zstd
     TarZstd,
 
-    /// Unknown archive format.
+    /// unknown archive format.
     Unknown,
 }
 
@@ -64,7 +64,7 @@ macro_rules! match_ext {
 }
 
 impl Format {
-    /// infers the archive format from the file extension of a provided
+    /// Infers the archive format from the file extension of a provided
     /// path.
     ///
     /// # Arguments
@@ -106,21 +106,64 @@ impl Format {
             Format::Unknown
         }
     }
+
+    /// Returns `true` if a the format is compressed
+    ///
+    /// Example
+    ///
+    /// ```
+    /// use arkiv::Format;
+    ///
+    /// assert_eq!(Format::Tar.is_compressed(), false);
+    /// assert_eq!(Format::TarGzip.is_compressed(), true);
+    /// assert_eq!(Format::Gzip.is_compressed(), true);
+    /// assert_eq!(Format::Zip.is_compressed(), true);
+    /// ```
+    pub fn is_compressed(&self) -> bool {
+        !matches!(self, Format::Tar)
+    }
+
+    /// Returns `true` if the format is an archive (as opposed
+    /// to a single compressed file).
+    ///
+    /// #Example
+    /// ```
+    /// use arkiv::Format;
+    ///
+    /// assert_eq!(Format::Tar.is_archive(), true);
+    /// assert_eq!(Format::TarGzip.is_archive(), true);
+    /// assert_eq!(Format::Gzip.is_archive(), false);
+    /// assert_eq!(Format::Zip.is_archive(), true);
+    /// ```
+    pub fn is_archive(&self) -> bool {
+        match self {
+            Format::Zip => true,
+            Format::Tar => true,
+            Format::Gzip => false,
+            Format::Zstd => false,
+            Format::Bzip2 => false,
+            Format::Xz2 => false,
+            Format::TarGzip => true,
+            Format::TarBzip2 => true,
+            Format::TarXz2 => true,
+            Format::TarZstd => true,
+            Format::Unknown => false,
+        }
+
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::Result;
-
-    macro_rules! assert_ext {
-        ($path: expr, $expected: expr) => {
-            assert_eq!(Format::infer_from_file_extension($path), $expected)
-        };
-    }
 
     #[test]
-    fn test_archive_type() -> Result<()> {
+    fn infer_from_file_extension() {
+        macro_rules! assert_ext {
+            ($path: expr, $expected: expr) => {
+                assert_eq!(Format::infer_from_file_extension($path), $expected)
+            };
+        }
         assert_ext!("sample.zip", Format::Zip);
         assert_ext!("sample.Zip", Format::Zip);
         assert_ext!("sample.tar", Format::Tar);
@@ -138,6 +181,46 @@ mod test {
         assert_ext!("sample.txt.gz", Format::Gzip);
         assert_ext!("sample.txt.zstd", Format::Zstd);
         assert_ext!("sample.txt.zst", Format::Zstd);
-        Ok(())
     }
+
+    #[test]
+    fn is_compressed() {
+        macro_rules! assert_ext {
+            ($format: expr, $expected: expr) => {
+                assert_eq!(($format).is_compressed(), $expected)
+            };
+        }
+        assert_ext!(Format::Zip, true);
+        assert_ext!(Format::Tar, false);
+        assert_ext!(Format::TarGzip, true);
+        assert_ext!(Format::TarXz2, true);
+        assert_ext!(Format::TarBzip2, true);
+        assert_ext!(Format::TarZstd, true);
+        assert_ext!(Format::Xz2, true);
+        assert_ext!(Format::Bzip2, true);
+        assert_ext!(Format::Gzip, true);
+        assert_ext!(Format::Zstd, true);
+        assert_ext!(Format::Zstd, true);
+    }
+
+    #[test]
+    fn is_archive() {
+        macro_rules! assert_ext {
+            ($format: expr, $expected: expr) => {
+                assert_eq!(($format).is_archive(), $expected)
+            };
+        }
+        assert_ext!(Format::Zip, true);
+        assert_ext!(Format::Tar, true);
+        assert_ext!(Format::TarGzip, true);
+        assert_ext!(Format::TarXz2, true);
+        assert_ext!(Format::TarBzip2, true);
+        assert_ext!(Format::TarZstd, true);
+        assert_ext!(Format::Xz2, false);
+        assert_ext!(Format::Bzip2, false);
+        assert_ext!(Format::Gzip, false);
+        assert_ext!(Format::Zstd, false);
+        assert_ext!(Format::Zstd, false);
+    }
+
 }
