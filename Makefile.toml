@@ -113,6 +113,10 @@ dependencies = [
 command = "cargo"
 args = ["clippy", "--all-targets", "--all-features", "--tests"]
 
+[tasks.doc]
+command = "cargo"
+args = ["doc", "--all-features"]
+
 [tasks.audit]
 command = "cargo"
 args = ["audit"]
@@ -126,4 +130,4 @@ command = "cargo"
 args = ["package", "--list"]
 
 [tasks.lint]
-dependencies = ["clippy", "audit", "publish-dry-run", "package-list"]
+dependencies = ["clippy", "doc", "audit", "publish-dry-run", "package-list"]

@@ -1,0 +1,16 @@
+name: Doc
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings" # Make sure CI fails on all warnings, including Clippy lints
+
+jobs:
+  clippy_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Doc
+        run: cargo doc --all-features
+
