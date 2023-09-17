@@ -8,7 +8,7 @@ type Result<T> = std::result::Result<T, Error>;
 fn test(path: impl AsRef<Path>) -> Result<()> {
     let mut archive = Archive::open(path)?;
     let mut actual = archive.entries()?;
-    let mut expected = vec!["sample/".to_string(), "sample/sample.txt".to_string()];
+    let mut expected = vec!["sample/", "sample/sample.txt"];
 
     actual.sort();
     expected.sort();
