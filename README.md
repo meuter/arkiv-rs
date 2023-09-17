@@ -14,7 +14,7 @@ through a single interface.
 
 ## Usage
 
-```no_run
+```rust , no_run
 use arkiv::{Result, Archive};
 
 fn main() -> Result<()> {
