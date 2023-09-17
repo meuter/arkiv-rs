@@ -1,5 +1,9 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
+mod format;
+
+#[allow(deprecated)]
+pub use format::{Format, ArchiveKind};
 
 use std::{fs::File, io::ErrorKind, path::Path};
 
@@ -42,30 +46,30 @@ pub struct Archive(Box<dyn Archived>);
 impl Archive {
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let _file = File::open(&path)?;
-        match ArchiveKind::infer_from_file_extension(path) {
+        match Format::infer_from_file_extension(path) {
             #[cfg(feature = "zip")]
-            ArchiveKind::Zip => Ok(Archive(Box::new(zip::ZipArchive::new(_file)?))),
+            Format::Zip => Ok(Archive(Box::new(zip::ZipArchive::new(_file)?))),
 
             #[cfg(feature = "tar")]
-            ArchiveKind::Tar => Ok(Archive(Box::new(tar::Archive::new(_file)))),
+            Format::Tar => Ok(Archive(Box::new(tar::Archive::new(_file)))),
 
             #[cfg(all(feature = "gzip", feature = "tar"))]
-            ArchiveKind::TarGzip => Ok(Archive(Box::new(tar::Archive::new(
+            Format::TarGzip => Ok(Archive(Box::new(tar::Archive::new(
                 flate2::read::GzDecoder::new(_file),
             )))),
 
             #[cfg(all(feature = "bzip2", feature = "tar"))]
-            ArchiveKind::TarBzip2 => Ok(Archive(Box::new(tar::Archive::new(
+            Format::TarBzip2 => Ok(Archive(Box::new(tar::Archive::new(
                 bzip2::read::BzDecoder::new(_file),
             )))),
 
             #[cfg(all(feature = "xz", feature = "tar"))]
-            ArchiveKind::TarXz2 => Ok(Archive(Box::new(tar::Archive::new(
+            Format::TarXz2 => Ok(Archive(Box::new(tar::Archive::new(
                 xz2::read::XzDecoder::new(_file),
             )))),
 
             #[cfg(all(feature = "zstd", feature = "tar"))]
-            ArchiveKind::TarZstd => Ok(Archive(Box::new(tar::Archive::new(
+            Format::TarZstd => Ok(Archive(Box::new(tar::Archive::new(
                 zstd::stream::Decoder::new(_file)?,
             )))),
 
@@ -82,102 +86,4 @@ impl Archive {
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum ArchiveKind {
-    Zip,
-    Tar,
-    Gzip,
-    Zstd,
-    Bzip2,
-    Xz2,
-    TarGzip,
-    TarBzip2,
-    TarXz2,
-    TarZstd,
-    Unknown,
-}
-
-macro_rules! match_ext {
-    ($path: expr, $ext: expr) => {
-        match $path.extension() {
-            Some(ext) if ext.to_ascii_lowercase() == ::std::ffi::OsStr::new($ext) => true,
-            _ => false,
-        }
-    };
-    ($path: expr, $ext1: expr, $ext2: expr) => {
-        match $path.extension() {
-            Some(ext) if ext.to_ascii_lowercase() == ::std::ffi::OsStr::new($ext2) => {
-                match $path.file_stem().map(::std::path::Path::new) {
-                    Some(path) => match_ext!(path, $ext1),
-                    _ => false,
-                }
-            }
-            _ => false,
-        }
-    };
-}
-
-impl ArchiveKind {
-    pub fn infer_from_file_extension(path: impl AsRef<Path>) -> Self {
-        let path = path.as_ref();
-
-        if match_ext!(path, "zip") {
-            ArchiveKind::Zip
-        } else if match_ext!(path, "tar") {
-            ArchiveKind::Tar
-        } else if match_ext!(path, "tgz") || match_ext!(path, "tar", "gz") {
-            ArchiveKind::TarGzip
-        } else if match_ext!(path, "tar", "xz") {
-            ArchiveKind::TarXz2
-        } else if match_ext!(path, "tar", "bz2") {
-            ArchiveKind::TarBzip2
-        } else if match_ext!(path, "tar", "zstd") || match_ext!(path, "tar", "zst") {
-            ArchiveKind::TarZstd
-        } else if match_ext!(path, "gz") {
-            ArchiveKind::Gzip
-        } else if match_ext!(path, "xz") {
-            ArchiveKind::Xz2
-        } else if match_ext!(path, "bz2") {
-            ArchiveKind::Bzip2
-        } else if match_ext!(path, "zstd") || match_ext!(path, "zst") {
-            ArchiveKind::Zstd
-        } else {
-            ArchiveKind::Unknown
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    macro_rules! assert_ext {
-        ($path: expr, $expected: expr) => {
-            assert_eq!(ArchiveKind::infer_from_file_extension($path), $expected)
-        };
-    }
-
-    #[test]
-    fn test_archive_type() -> Result<()> {
-        assert_ext!("sample.zip", ArchiveKind::Zip);
-        assert_ext!("sample.Zip", ArchiveKind::Zip);
-        assert_ext!("sample.tar", ArchiveKind::Tar);
-        assert_ext!("sample.TAR", ArchiveKind::Tar);
-        assert_ext!("sample.tar.gz", ArchiveKind::TarGzip);
-        assert_ext!("sample.tAr.gz", ArchiveKind::TarGzip);
-        assert_ext!("sample.tgz", ArchiveKind::TarGzip);
-        assert_ext!("sample.tar.xz", ArchiveKind::TarXz2);
-        assert_ext!("sample.tar.bz2", ArchiveKind::TarBzip2);
-        assert_ext!("sample.tar.zstd", ArchiveKind::TarZstd);
-        assert_ext!("sample.tar.zst", ArchiveKind::TarZstd);
-        assert_ext!("sample.xz", ArchiveKind::Xz2);
-        assert_ext!("sample.bz2", ArchiveKind::Bzip2);
-        assert_ext!("sample.exe", ArchiveKind::Unknown);
-        assert_ext!("sample.txt.gz", ArchiveKind::Gzip);
-        assert_ext!("sample.txt.zstd", ArchiveKind::Zstd);
-        assert_ext!("sample.txt.zst", ArchiveKind::Zstd);
-        Ok(())
-    }
-}
