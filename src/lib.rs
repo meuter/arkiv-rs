@@ -134,7 +134,8 @@ impl Archive {
         self.0.entries()
     }
 
-    /// unpacks the contents of the archive.
+    /// Unpacks the contents of the archive. On unix systems all permissions
+    /// will be preserved.
     ///
     /// # Arguments
     ///
