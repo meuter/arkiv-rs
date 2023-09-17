@@ -1,14 +1,14 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 mod format;
+mod result;
 
 #[allow(deprecated)]
 pub use format::{ArchiveKind, Format};
 
-use std::{fs::File, io::ErrorKind, path::Path};
+pub use result::{Error, Result};
 
-pub type Error = std::io::Error;
-pub type Result<T> = std::io::Result<T>;
+use std::{fs::File, path::Path};
 
 trait Archived {
     fn unpack(&mut self, dest: &Path) -> Result<()>;
@@ -16,21 +16,36 @@ trait Archived {
 }
 
 #[cfg(feature = "zip")]
-impl<R: ::std::io::Read + ::std::io::Seek> Archived for zip::ZipArchive<R> {
-    fn unpack(&mut self, dest: &Path) -> Result<()> {
-        Ok(self.extract(dest)?)
+mod zip_feature {
+    use super::*;
+
+    impl From<::zip::result::ZipError> for Error {
+        fn from(value: ::zip::result::ZipError) -> Self {
+            match value {
+                ::zip::result::ZipError::Io(err) => Error::Io(err),
+                ::zip::result::ZipError::InvalidArchive(err) => Error::InvalidArchive(err),
+                ::zip::result::ZipError::UnsupportedArchive(err) => Error::UnsupportedArchive(err),
+                ::zip::result::ZipError::FileNotFound => Error::FileNotFound,
+            }
+        }
     }
 
-    fn entries(&mut self) -> Result<Vec<String>> {
-        let files = self.file_names().map(|e| e.into()).collect();
-        Ok(files)
+    impl<R: ::std::io::Read + ::std::io::Seek> Archived for zip::ZipArchive<R> {
+        fn unpack(&mut self, dest: &Path) -> Result<()> {
+            Ok(self.extract(dest)?)
+        }
+
+        fn entries(&mut self) -> Result<Vec<String>> {
+            let files = self.file_names().map(|e| e.into()).collect();
+            Ok(files)
+        }
     }
 }
 
 #[cfg(feature = "tar")]
 impl<R: ::std::io::Read> Archived for tar::Archive<R> {
     fn unpack(&mut self, dest: &Path) -> Result<()> {
-        self.unpack(dest)
+        Ok(self.unpack(dest)?)
     }
 
     fn entries(&mut self) -> Result<Vec<String>> {
@@ -41,7 +56,7 @@ impl<R: ::std::io::Read> Archived for tar::Archive<R> {
     }
 }
 
-/// A collection of files, possibly compressed (e.g. `tgz`, `zip`, ...).
+/// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
 ///
 /// # Supported Formats
 ///
@@ -100,7 +115,9 @@ impl Archive {
                 zstd::stream::Decoder::new(_file)?,
             )))),
 
-            _ => Err(ErrorKind::Other.into()),
+            _ => Err(Error::UnsupportedArchive(
+                "unsupported format, check the feature of the crate?",
+            )),
         }
     }
 
