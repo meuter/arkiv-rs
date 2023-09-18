@@ -18,7 +18,12 @@ use ::xz2::read::XzDecoder;
 #[cfg(all(feature = "tar", feature = "zstd"))]
 use ::zstd::stream::Decoder as ZstdDecoder;
 
-use crate::{Archived, Error, Format, Result};
+use crate::{Error, Format, Result};
+
+pub(crate) trait Archived {
+    fn unpack(&mut self, dest: &Path) -> Result<()>;
+    fn entries(&mut self) -> Result<Vec<String>>;
+}
 
 /// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
 ///
