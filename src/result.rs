@@ -20,8 +20,8 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl From<io::Error> for Error {
-    fn from(value: io::Error) -> Self {
-        Error::Io(value)
+    fn from(err: io::Error) -> Self {
+        Error::Io(err)
     }
 }
 

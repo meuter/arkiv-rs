@@ -1,28 +1,49 @@
-use ::std::{fs::File, path::Path};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 #[cfg(feature = "zip")]
-use ::zip::ZipArchive as Zip;
+use zip::ZipArchive as Zip;
 
 #[cfg(feature = "tar")]
-use ::tar::Archive as Tar;
+use tar::Archive as Tar;
 
 #[cfg(all(feature = "tar", feature = "gzip"))]
-use ::flate2::read::GzDecoder;
+use flate2::read::GzDecoder;
 
 #[cfg(all(feature = "tar", feature = "bzip2"))]
-use ::bzip2::read::BzDecoder;
+use bzip2::read::BzDecoder;
 
 #[cfg(all(feature = "tar", feature = "xz2"))]
-use ::xz2::read::XzDecoder;
+use xz2::read::XzDecoder;
 
 #[cfg(all(feature = "tar", feature = "zstd"))]
-use ::zstd::stream::Decoder as ZstdDecoder;
+use zstd::stream::Decoder as ZstdDecoder;
 
 use crate::{Error, Format, Result};
 
+/// A descriptor of one entry in an archive.
+#[derive(Debug)]
+pub struct Entry {
+    pub(crate) path: PathBuf,
+}
+
+impl Entry {
+    /// Returns the path of the entry
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+/// An iterator over the entries of the archive
+pub type Entries<'a> = Box<dyn 'a + Iterator<Item = Result<Entry>>>;
+
+/// private interface for an archive backend (zip or archive)
 pub(crate) trait Archived {
     fn unpack(&mut self, dest: &Path) -> Result<()>;
     fn entries(&mut self) -> Result<Vec<String>>;
+    fn entries_iter(&mut self) -> Result<Entries>;
 }
 
 /// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
@@ -89,7 +110,8 @@ impl Archive {
     /// For convenience, these entries are returned as an already
     /// collected `Vec<String>`. If the archive contains a large
     /// number of files, the amount of memory required to store
-    /// these entries might be large.
+    /// these entries might be large. See [Archive::entries_iter]
+    /// for an iterator version.
     ///
     /// # Example
     ///
@@ -97,19 +119,42 @@ impl Archive {
     /// use arkiv::{Archive, Result};
     ///
     /// fn main() -> Result<()> {
-    ///    let mut archive = Archive::open("path/to/archive.tgz")?;
-    ///    let entries: Vec<String> = archive.entries()?;
+    ///     let mut archive = Archive::open("path/to/archive.tgz")?;
+    ///     let entries: Vec<String> = archive.entries()?;
     ///
-    ///    for entry in entries {
-    ///        print!("{entry}");
-    ///    }
-    ///    Ok(())
+    ///     for entry in entries {
+    ///         print!("{entry}");
+    ///     }
+    ///     Ok(())
     /// }
     /// ```
     ///
     ///
     pub fn entries(&mut self) -> Result<Vec<String>> {
         self.0.entries()
+    }
+
+    /// Constructs an iterator over the entries in this archive
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use arkiv::{Archive, Result};
+    ///
+    /// fn main() -> Result<()> {
+    ///     let mut archive = Archive::open("path/to/archive.tgz")?;
+    ///
+    ///     for entry in archive.entries_iter()? {
+    ///         let entry = entry?;
+    ///         print!("{}", entry.path().display());
+    ///     }
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    ///
+    pub fn entries_iter(&mut self) -> Result<Entries> {
+        self.0.entries_iter()
     }
 
     /// Unpacks the contents of the archive. On unix systems all permissions

@@ -22,8 +22,9 @@ fn main() -> Result<()> {
     let mut archive = arkiv::Archive::open("path/to/archive.tar.xz")?;
 
     // iterate over entries
-    for entry in archive.entries()? {
-        println!("{entry}");
+    for entry in archive.entries_iter()? {
+        let entry = entry?;
+        println!("{}", entry.path().display());
     }
 
     // extract the archive (perserves permission on unix targets)

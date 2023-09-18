@@ -10,9 +10,10 @@ mod zip;
 #[cfg(feature = "tar")]
 mod tar;
 
-pub use archive::Archive;
+pub use archive::{Archive, Entries, Entry};
 pub use format::Format;
 pub use result::{Error, Result};
 
+/// Available archive file formats.
 #[allow(deprecated)]
 pub use format::ArchiveKind;

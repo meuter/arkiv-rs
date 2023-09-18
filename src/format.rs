@@ -46,14 +46,14 @@ pub type ArchiveKind = Format;
 macro_rules! match_ext {
     ($path: expr, $ext: expr) => {
         match $path.extension() {
-            Some(ext) if ext.to_ascii_lowercase() == ::std::ffi::OsStr::new($ext) => true,
+            Some(ext) if ext.to_ascii_lowercase() == std::ffi::OsStr::new($ext) => true,
             _ => false,
         }
     };
     ($path: expr, $ext1: expr, $ext2: expr) => {
         match $path.extension() {
-            Some(ext) if ext.to_ascii_lowercase() == ::std::ffi::OsStr::new($ext2) => {
-                match $path.file_stem().map(::std::path::Path::new) {
+            Some(ext) if ext.to_ascii_lowercase() == std::ffi::OsStr::new($ext2) => {
+                match $path.file_stem().map(std::path::Path::new) {
                     Some(path) => match_ext!(path, $ext1),
                     _ => false,
                 }
@@ -149,7 +149,6 @@ impl Format {
             Format::TarZstd => true,
             Format::Unknown => false,
         }
-
     }
 }
 
@@ -222,5 +221,4 @@ mod test {
         assert_ext!(Format::Zstd, false);
         assert_ext!(Format::Zstd, false);
     }
-
 }
