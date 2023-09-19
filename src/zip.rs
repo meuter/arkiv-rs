@@ -64,7 +64,6 @@ impl<R: Read + Seek> Archived for ZipArchive<R> {
     }
 
     fn entries(&mut self) -> Result<Entries> {
-        // Ok(Box::new(ZipEntries(self.file_names())))
         let archive = self;
         let index = 0;
         let zip_entries = ZipEntries { archive, index };
