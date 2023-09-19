@@ -63,12 +63,7 @@ impl<R: Read + Seek> Archived for ZipArchive<R> {
         Ok(self.extract(dest)?)
     }
 
-    fn entries(&mut self) -> Result<Vec<String>> {
-        let files = self.file_names().map(|e| e.into()).collect();
-        Ok(files)
-    }
-
-    fn entries_iter(&mut self) -> Result<Entries> {
+    fn entries(&mut self) -> Result<Entries> {
         // Ok(Box::new(ZipEntries(self.file_names())))
         let archive = self;
         let index = 0;

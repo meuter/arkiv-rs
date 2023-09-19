@@ -42,8 +42,7 @@ pub type Entries<'a> = Box<dyn 'a + Iterator<Item = Result<Entry>>>;
 /// private interface for an archive backend (zip or archive)
 pub(crate) trait Archived {
     fn unpack(&mut self, dest: &Path) -> Result<()>;
-    fn entries(&mut self) -> Result<Vec<String>>;
-    fn entries_iter(&mut self) -> Result<Entries>;
+    fn entries(&mut self) -> Result<Entries>;
 }
 
 /// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
@@ -128,10 +127,13 @@ impl Archive {
     ///     Ok(())
     /// }
     /// ```
-    ///
-    ///
     pub fn entries(&mut self) -> Result<Vec<String>> {
-        self.0.entries()
+        let mut result: Vec<String> = vec![];
+        for entry in self.entries_iter()? {
+            let entry = entry?;
+            result.push(entry.path().display().to_string());
+        }
+        Ok(result)
     }
 
     /// Constructs an iterator over the entries in this archive
@@ -154,7 +156,7 @@ impl Archive {
     ///
     ///
     pub fn entries_iter(&mut self) -> Result<Entries> {
-        self.0.entries_iter()
+        self.0.entries()
     }
 
     /// Unpacks the contents of the archive. On unix systems all permissions

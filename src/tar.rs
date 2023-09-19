@@ -34,14 +34,7 @@ impl<R: Read> Archived for tar::Archive<R> {
         Ok(self.unpack(dest)?)
     }
 
-    fn entries(&mut self) -> Result<Vec<String>> {
-        let files = tar::Archive::entries(self)?
-            .map(|e| e.unwrap().path().unwrap().to_str().unwrap().into())
-            .collect();
-        Ok(files)
-    }
-
-    fn entries_iter(&mut self) -> Result<Entries> {
+    fn entries(&mut self) -> Result<Entries> {
         let inner_entries = tar::Archive::entries(self)?;
         Ok(Box::new(TarEntries(inner_entries)))
     }
