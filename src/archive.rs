@@ -27,12 +27,18 @@ use crate::{Error, Format, Result};
 #[derive(Debug)]
 pub struct Entry {
     pub(crate) path: PathBuf,
+    pub(crate) size: u64,
 }
 
 impl Entry {
     /// Returns the path of the entry
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    /// Returns the size of the entry
+    pub fn size(&self) -> u64 {
+        self.size
     }
 }
 

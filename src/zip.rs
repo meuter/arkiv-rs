@@ -44,7 +44,8 @@ where
                 .enclosed_name()
                 .ok_or(Error::InvalidArchive("invalid filename"))?
                 .to_path_buf();
-            let entry = Entry { path };
+            let size = zip_file.size();
+            let entry = Entry { path, size };
             Ok(entry)
         }
 

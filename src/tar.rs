@@ -20,8 +20,10 @@ where
         fn convert<'a, R: 'a + Read>(
             orig_tar_entry: io::Result<tar::Entry<'a, R>>,
         ) -> Result<Entry> {
-            let path = orig_tar_entry?.path()?.to_path_buf();
-            let entry = Entry { path };
+            let orig_tar_entry = orig_tar_entry?;
+            let path = orig_tar_entry.path()?.to_path_buf();
+            let size = orig_tar_entry.size();
+            let entry = Entry { path, size };
             Ok(entry)
         }
 
