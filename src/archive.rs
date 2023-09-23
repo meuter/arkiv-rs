@@ -164,6 +164,16 @@ impl Archive {
             .expect("inner was freshly replaced, this should never happen"))
     }
 
+    /// Returns the format of the archive.
+    pub fn format(&self) -> Format {
+        self.format.clone()
+    }
+
+    /// Returns the path of this archive.
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
     /// Returns the list of entries stored within the archive.
     ///
     /// # Warning
