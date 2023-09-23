@@ -15,6 +15,9 @@ fn test(path: impl AsRef<Path>) -> Result<()> {
         "sample\n"
     );
 
+    /// call a second time to check that the rewind is done properly
+    assert!(archive.unpack(&sandbox).is_ok());
+
     Ok(())
 }
 

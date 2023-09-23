@@ -87,7 +87,9 @@ pub(crate) trait Archived {
 /// - `sample.tar.bz2` (requires `tar` and `bzip` features).
 /// - `sample.tar.zstd` or `sample.tar.zst` (requires `tar` and `zstd` features).
 pub struct Archive {
-    inner: Box<dyn Archived>,
+    path: PathBuf,
+    format: Format,
+    inner: Option<Box<dyn Archived>>,
 }
 
 impl Archive {
@@ -109,32 +111,57 @@ impl Archive {
     /// ```
     ///
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
-        let _file = File::open(&path)?;
-        let result: Result<Box<dyn Archived>> = match Format::infer_from_file_extension(path) {
+        let path = path.as_ref().to_path_buf();
+
+        let format = Format::infer_from_file_extension(&path);
+        if !format.is_archive() {
+            Err(Error::UnsupportedArchive(
+                "unsupported format, did you enable the proper feature?",
+            ))?;
+        }
+
+        let inner = None;
+
+        Ok(Archive {
+            path,
+            format,
+            inner,
+        })
+    }
+
+    fn inner(&mut self) -> Result<&mut Box<dyn Archived>> {
+        #[allow(unused)]
+        let file = File::open(&self.path)?;
+
+        let result: Result<Box<dyn Archived>> = match self.format {
             #[cfg(feature = "zip")]
-            Format::Zip => Ok(Box::new(Zip::new(_file)?)),
+            Format::Zip => Ok(Box::new(Zip::new(file)?)),
 
             #[cfg(feature = "tar")]
-            Format::Tar => Ok(Box::new(Tar::new(_file))),
+            Format::Tar => Ok(Box::new(Tar::new(file))),
 
             #[cfg(all(feature = "tar", feature = "gzip"))]
-            Format::TarGzip => Ok(Box::new(Tar::new(GzDecoder::new(_file)))),
+            Format::TarGzip => Ok(Box::new(Tar::new(GzDecoder::new(file)))),
 
             #[cfg(all(feature = "tar", feature = "bzip2"))]
-            Format::TarBzip2 => Ok(Box::new(Tar::new(BzDecoder::new(_file)))),
+            Format::TarBzip2 => Ok(Box::new(Tar::new(BzDecoder::new(file)))),
 
             #[cfg(all(feature = "tar", feature = "xz2"))]
-            Format::TarXz2 => Ok(Box::new(Tar::new(XzDecoder::new(_file)))),
+            Format::TarXz2 => Ok(Box::new(Tar::new(XzDecoder::new(file)))),
 
             #[cfg(all(feature = "tar", feature = "zstd"))]
-            Format::TarZstd => Ok(Box::new(Tar::new(ZstdDecoder::new(_file)?))),
+            Format::TarZstd => Ok(Box::new(Tar::new(ZstdDecoder::new(file)?))),
 
             _ => Err(Error::UnsupportedArchive(
                 "unsupported format, did you enable the proper feature?",
             )),
         };
 
-        result.map(|inner| Archive { inner })
+        self.inner.replace(result?);
+        Ok(self
+            .inner
+            .as_mut()
+            .expect("inner was freshly replaced, this should never happen"))
     }
 
     /// Returns the list of entries stored within the archive.
@@ -191,7 +218,7 @@ impl Archive {
     ///
     ///
     pub fn entries_iter(&mut self) -> Result<Entries> {
-        self.inner.entries()
+        self.inner()?.entries()
     }
 
     /// Unpacks the contents of the archive. On unix systems all permissions
@@ -213,6 +240,6 @@ impl Archive {
     /// }
     /// ```
     pub fn unpack(&mut self, dest: impl AsRef<Path>) -> Result<()> {
-        self.inner.unpack(dest.as_ref())
+        self.inner()?.unpack(dest.as_ref())
     }
 }

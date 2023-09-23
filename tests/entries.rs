@@ -13,6 +13,9 @@ fn test(path: impl AsRef<Path>) -> Result<()> {
     actual.sort();
     expected.sort();
 
+    /// call a second time to check that the rewind is done properly
+    assert!(archive.entries().is_ok());
+
     assert_eq!(actual, expected);
     Ok(())
 }
