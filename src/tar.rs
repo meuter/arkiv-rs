@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    archive::{Archived, Entries},
+    archive::{Archived, Entries, EntryType},
     Entry, Result,
 };
 
@@ -23,7 +23,16 @@ where
             let orig_tar_entry = orig_tar_entry?;
             let path = orig_tar_entry.path()?.to_path_buf();
             let size = orig_tar_entry.size();
-            let entry = Entry { path, size };
+            let entry_type = match orig_tar_entry.header().entry_type() {
+                tar::EntryType::Regular => EntryType::File,
+                tar::EntryType::Directory => EntryType::Directory,
+                _ => EntryType::Other,
+            };
+            let entry = Entry {
+                path,
+                size,
+                entry_type,
+            };
             Ok(entry)
         }
 

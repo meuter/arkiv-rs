@@ -13,7 +13,16 @@ fn test(path: impl AsRef<Path>) -> Result<()> {
     for entry in archive.entries_iter()? {
         let entry = entry?;
         let path = entry.path().display().to_string();
-        actual.push(path)
+        if path == "sample/" {
+            assert!(entry.is_dir());
+            assert!(!entry.is_file());
+            assert_eq!(entry.size(), 0);
+        } else {
+            assert!(entry.is_file());
+            assert!(!entry.is_dir());
+            assert_eq!(entry.size(), 7);
+        }
+        actual.push(path);
     }
 
     actual.sort();
