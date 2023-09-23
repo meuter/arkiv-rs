@@ -10,7 +10,7 @@ use zip::{
 };
 
 use crate::{
-    archive::{Archived, Entries},
+    archive::{Archived, Entries, EntryType},
     Entry, Error, Result,
 };
 
@@ -44,7 +44,17 @@ where
                 .enclosed_name()
                 .ok_or(Error::InvalidArchive("invalid filename"))?
                 .to_path_buf();
-            let entry = Entry { path };
+            let size = zip_file.size();
+            let entry_type = if zip_file.is_dir() {
+                EntryType::Directory
+            } else {
+                EntryType::File
+            };
+            let entry = Entry {
+                path,
+                size,
+                entry_type,
+            };
             Ok(entry)
         }
 
@@ -64,7 +74,6 @@ impl<R: Read + Seek> Archived for ZipArchive<R> {
     }
 
     fn entries(&mut self) -> Result<Entries> {
-        // Ok(Box::new(ZipEntries(self.file_names())))
         let archive = self;
         let index = 0;
         let zip_entries = ZipEntries { archive, index };
