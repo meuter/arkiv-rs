@@ -252,4 +252,32 @@ impl Archive {
     pub fn unpack(&mut self, dest: impl AsRef<Path>) -> Result<()> {
         self.inner()?.unpack(dest.as_ref())
     }
+
+    /// Returns an entry corresponding to a given path within the archive
+    ///
+    /// # Arguments
+    ///
+    /// - `entry_path`: the path of the enty to look up
+    ///
+    /// ```no_run
+    /// use arkiv::{Archive, Result};
+    //
+    /// fn main() -> Result<()> {
+    ///    let mut archive = Archive::open("path/to/archive.tgz")?;
+    ///    let entry = archive.entry_by_name("some/file_in_the_archive.txt")?;
+    ///    println!("{}", entry.path().display());
+    ///    Ok(())
+    /// }
+    /// ```
+    pub fn entry_by_name(&mut self, entry_path: impl AsRef<Path>) -> Result<Entry> {
+        let entry_path = entry_path.as_ref();
+        for entry in self.entries_iter()? {
+            let entry = entry?;
+            if entry.path() == entry_path {
+                return Ok(entry);
+            }
+        }
+        Err(Error::FileNotFound)
+    }
+
 }
