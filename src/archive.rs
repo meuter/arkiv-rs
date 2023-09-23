@@ -55,7 +55,9 @@ pub(crate) trait Archived {
 /// - `sample.tar.xz` (requires `tar` and `xz` features).
 /// - `sample.tar.bz2` (requires `tar` and `bzip` features).
 /// - `sample.tar.zstd` or `sample.tar.zst` (requires `tar` and `zstd` features).
-pub struct Archive(Box<dyn Archived>);
+pub struct Archive {
+    inner: Box<dyn Archived>,
+}
 
 impl Archive {
     /// Opens an archive stored on the filesystem.
@@ -77,29 +79,31 @@ impl Archive {
     ///
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let _file = File::open(&path)?;
-        match Format::infer_from_file_extension(path) {
+        let result: Result<Box<dyn Archived>> = match Format::infer_from_file_extension(path) {
             #[cfg(feature = "zip")]
-            Format::Zip => Ok(Archive(Box::new(Zip::new(_file)?))),
+            Format::Zip => Ok(Box::new(Zip::new(_file)?)),
 
             #[cfg(feature = "tar")]
-            Format::Tar => Ok(Archive(Box::new(Tar::new(_file)))),
+            Format::Tar => Ok(Box::new(Tar::new(_file))),
 
             #[cfg(all(feature = "tar", feature = "gzip"))]
-            Format::TarGzip => Ok(Archive(Box::new(Tar::new(GzDecoder::new(_file))))),
+            Format::TarGzip => Ok(Box::new(Tar::new(GzDecoder::new(_file)))),
 
             #[cfg(all(feature = "tar", feature = "bzip2"))]
-            Format::TarBzip2 => Ok(Archive(Box::new(Tar::new(BzDecoder::new(_file))))),
+            Format::TarBzip2 => Ok(Box::new(Tar::new(BzDecoder::new(_file)))),
 
             #[cfg(all(feature = "tar", feature = "xz2"))]
-            Format::TarXz2 => Ok(Archive(Box::new(Tar::new(XzDecoder::new(_file))))),
+            Format::TarXz2 => Ok(Box::new(Tar::new(XzDecoder::new(_file)))),
 
             #[cfg(all(feature = "tar", feature = "zstd"))]
-            Format::TarZstd => Ok(Archive(Box::new(Tar::new(ZstdDecoder::new(_file)?)))),
+            Format::TarZstd => Ok(Box::new(Tar::new(ZstdDecoder::new(_file)?))),
 
             _ => Err(Error::UnsupportedArchive(
                 "unsupported format, did you enable the proper feature?",
             )),
-        }
+        };
+
+        result.map(|inner| Archive { inner })
     }
 
     /// Returns the list of entries stored within the archive.
@@ -156,7 +160,7 @@ impl Archive {
     ///
     ///
     pub fn entries_iter(&mut self) -> Result<Entries> {
-        self.0.entries()
+        self.inner.entries()
     }
 
     /// Unpacks the contents of the archive. On unix systems all permissions
@@ -178,6 +182,6 @@ impl Archive {
     /// }
     /// ```
     pub fn unpack(&mut self, dest: impl AsRef<Path>) -> Result<()> {
-        self.0.unpack(dest.as_ref())
+        self.inner.unpack(dest.as_ref())
     }
 }
