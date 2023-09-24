@@ -1,4 +1,6 @@
 use std::{
+    borrow::Cow,
+    ffi::OsString,
     fs::File,
     path::{Path, PathBuf},
 };
@@ -76,6 +78,28 @@ pub(crate) trait Archived {
     fn entries(&mut self) -> Result<Entries>;
 }
 
+pub(crate) enum Storage {
+    FileOnDisk {
+        path: PathBuf,
+    },
+    #[allow(unused)]
+    FileInTempDirectory {
+        temp: tempfile::TempDir,
+        file_name: OsString,
+    },
+}
+
+impl Storage {
+    pub(crate) fn as_path(&self) -> Cow<Path> {
+        match self {
+            Storage::FileOnDisk { path } => Cow::Borrowed(path),
+            Storage::FileInTempDirectory { temp, file_name } => {
+                Cow::Owned(temp.path().join(file_name))
+            }
+        }
+    }
+}
+
 /// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
 ///
 /// # Supported Formats
@@ -87,12 +111,28 @@ pub(crate) trait Archived {
 /// - `sample.tar.bz2` (requires `tar` and `bzip` features).
 /// - `sample.tar.zstd` or `sample.tar.zst` (requires `tar` and `zstd` features).
 pub struct Archive {
-    path: PathBuf,
     format: Format,
-    inner: Option<Box<dyn Archived>>,
+    storage: Storage,
+    archived: Option<Box<dyn Archived>>,
 }
 
 impl Archive {
+    pub(crate) fn new(storage: Storage) -> Result<Self> {
+        let archived = None;
+        let format = Format::infer_from_file_extension(storage.as_path());
+        if !format.is_archive() {
+            Err(Error::UnsupportedArchive(
+                "unsupported format, did you enable the proper feature?",
+            ))?;
+        }
+
+        Ok(Archive {
+            format,
+            storage,
+            archived,
+        })
+    }
+
     /// Opens an archive stored on the filesystem.
     ///
     /// The format of the archive will be inferred from the file
@@ -112,26 +152,13 @@ impl Archive {
     ///
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let path = path.as_ref().to_path_buf();
-
-        let format = Format::infer_from_file_extension(&path);
-        if !format.is_archive() {
-            Err(Error::UnsupportedArchive(
-                "unsupported format, did you enable the proper feature?",
-            ))?;
-        }
-
-        let inner = None;
-
-        Ok(Archive {
-            path,
-            format,
-            inner,
-        })
+        let storage = Storage::FileOnDisk { path };
+        Archive::new(storage)
     }
 
-    fn inner(&mut self) -> Result<&mut Box<dyn Archived>> {
+    fn archived(&mut self) -> Result<&mut Box<dyn Archived>> {
         #[allow(unused)]
-        let file = File::open(&self.path)?;
+        let file = File::open(self.path())?;
 
         let result: Result<Box<dyn Archived>> = match self.format {
             #[cfg(feature = "zip")]
@@ -157,21 +184,21 @@ impl Archive {
             )),
         };
 
-        self.inner.replace(result?);
+        self.archived.replace(result?);
         Ok(self
-            .inner
+            .archived
             .as_mut()
             .expect("inner was freshly replaced, this should never happen"))
     }
 
     /// Returns the format of the archive.
-    pub fn format(&self) -> Format {
-        self.format.clone()
+    pub fn format(&self) -> &Format {
+        &self.format
     }
 
-    /// Returns the path of this archive.
-    pub fn path(&self) -> &Path {
-        &self.path
+    /// Returns the path of the archive.
+    pub fn path(&self) -> Cow<Path> {
+        self.storage.as_path()
     }
 
     /// Returns the list of entries stored within the archive.
@@ -228,7 +255,7 @@ impl Archive {
     ///
     ///
     pub fn entries_iter(&mut self) -> Result<Entries> {
-        self.inner()?.entries()
+        self.archived()?.entries()
     }
 
     /// Unpacks the contents of the archive. On unix systems all permissions
@@ -250,7 +277,7 @@ impl Archive {
     /// }
     /// ```
     pub fn unpack(&mut self, dest: impl AsRef<Path>) -> Result<()> {
-        self.inner()?.unpack(dest.as_ref())
+        self.archived()?.unpack(dest.as_ref())
     }
 
     /// Returns an entry corresponding to a given path within the archive
@@ -279,5 +306,4 @@ impl Archive {
         }
         Err(Error::FileNotFound)
     }
-
 }
