@@ -77,6 +77,7 @@ pub(crate) trait Archived {
     fn entries(&mut self) -> Result<Entries>;
 }
 
+#[derive(Debug)]
 pub(crate) enum Storage {
     FileOnDisk {
         path: PathBuf,

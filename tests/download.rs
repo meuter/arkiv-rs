@@ -1,7 +1,7 @@
 #[cfg(feature = "download")]
 mod download {
 
-    use arkiv::Archive;
+    use arkiv::{Archive, Error as ArkivError};
     use httptest::{matchers::request, responders::status_code, Expectation, Server};
     use std::{
         fs::File,
@@ -11,6 +11,34 @@ mod download {
 
     type Error = Box<dyn std::error::Error>;
     type Result<T> = std::result::Result<T, Error>;
+
+    #[allow(unused)]
+    async fn test_404(path: impl AsRef<Path>) -> Result<()> {
+        // read archive contents into buffer
+        let archive_file = File::open(path.as_ref())?;
+        let mut reader = BufReader::new(archive_file);
+        let mut buffer = Vec::new();
+        reader.read_to_end(&mut buffer)?;
+
+        // prepare test server to return archive contents on request
+        let server = Server::run();
+        server.expect(
+            Expectation::matching(request::method_path(
+                "GET",
+                format!("/{}", path.as_ref().display()),
+            ))
+            .respond_with(status_code(404)),
+        );
+
+        // download archive
+        let url = format!("/{}", path.as_ref().display());
+        let url = server.url(&url);
+
+        let res = Archive::download(url.to_string());
+        assert!(matches!(res, Err(ArkivError::InvalidRequest(_))));
+
+        Ok(())
+    }
 
     #[allow(unused)]
     async fn test(path: impl AsRef<Path>) -> Result<()> {
@@ -43,6 +71,11 @@ mod download {
         assert_eq!(actual, expected);
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn download_404() -> Result<()> {
+        test_404("tests/sample/sample.zip").await
     }
 
     #[tokio::test]
