@@ -1,6 +1,5 @@
 use std::{
     borrow::Cow,
-    ffi::OsString,
     fs::File,
     path::{Path, PathBuf},
 };
@@ -82,10 +81,10 @@ pub(crate) enum Storage {
     FileOnDisk {
         path: PathBuf,
     },
-    #[allow(unused)]
+    #[cfg(feature = "download")]
     FileInTempDirectory {
         temp: tempfile::TempDir,
-        file_name: OsString,
+        file_name: std::ffi::OsString,
     },
 }
 
@@ -93,6 +92,7 @@ impl Storage {
     pub(crate) fn as_path(&self) -> Cow<Path> {
         match self {
             Storage::FileOnDisk { path } => Cow::Borrowed(path),
+            #[cfg(feature = "download")]
             Storage::FileInTempDirectory { temp, file_name } => {
                 Cow::Owned(temp.path().join(file_name))
             }
@@ -154,6 +154,30 @@ impl Archive {
         let path = path.as_ref().to_path_buf();
         let storage = Storage::FileOnDisk { path };
         Archive::new(storage)
+    }
+
+    /// Downloads an archive to a temporary directory and opens the archive.
+    ///
+    /// This function is only available if the `download` feature is enabled.
+    ///
+    /// This function is a simple convenience wrapper around the [Downloader](crate::Downloader),
+    /// which provides more features.
+    ///
+    /// # Arguments:
+    ///
+    /// - `url`: the url to the archive file to open
+    ///
+    /// # Examples:
+    ///
+    /// ```no_run
+    /// use arkiv::Archive;
+    ///
+    /// let archive = Archive::download("https://getsamplefiles.com/download/zip/sample-1.zip");
+    /// ```
+    ///
+    #[cfg(feature = "download")]
+    pub fn download(url: impl AsRef<str>) -> Result<Self> {
+        crate::Downloader::new().url(url).to_temp().download()
     }
 
     fn archived(&mut self) -> Result<&mut Box<dyn Archived>> {

@@ -4,6 +4,9 @@ mod archive;
 mod format;
 mod result;
 
+#[cfg(feature = "download")]
+mod download;
+
 #[cfg(feature = "zip")]
 mod zip;
 
@@ -13,6 +16,9 @@ mod tar;
 pub use archive::{Archive, Entries, Entry};
 pub use format::Format;
 pub use result::{Error, Result};
+
+#[cfg(feature = "download")]
+pub use download::{DestMissing, DestProvided, Downloader, UrlMissing, UrlProvided};
 
 /// Available archive file formats.
 #[allow(deprecated)]

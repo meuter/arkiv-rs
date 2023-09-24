@@ -14,6 +14,12 @@ pub enum Error {
 
     /// The requested file could not be found in the archive
     FileNotFound,
+
+    /// The URL to the archive is invalid
+    InvalidUrl(String),
+
+    /// An error occurred when downloading an archive
+    InvalidRequest(String),
 }
 
 /// Result type used throughout this crate
@@ -32,6 +38,8 @@ impl Display for Error {
             Error::InvalidArchive(err) => write!(fmt, "invalid archive: {err}"),
             Error::UnsupportedArchive(err) => write!(fmt, "unsupported archive: {err}"),
             Error::FileNotFound => write!(fmt, "specified file not found in archive"),
+            Error::InvalidUrl(url) => write!(fmt, "invalid url: '{url}'"),
+            Error::InvalidRequest(err) => write!(fmt, "{err}"),
         }
     }
 }
