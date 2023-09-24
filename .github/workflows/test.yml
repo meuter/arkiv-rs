@@ -16,7 +16,7 @@ jobs:
       - name: Test with default feature
         run: cargo test
       - name: Test with all features
-        run: cargo test
+        run: cargo test --all-features
       - name: Test without any feature
         run: cargo test --no-default-features
       - name: Test each features individually
@@ -27,3 +27,5 @@ jobs:
           cargo test --no-default-features -F xz
           cargo test --no-default-features -F zstd
           cargo test --no-default-features -F zip
+          cargo test --no-default-features -F download
+
