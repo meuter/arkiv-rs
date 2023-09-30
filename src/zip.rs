@@ -9,10 +9,7 @@ use zip::{
     ZipArchive,
 };
 
-use crate::{
-    archive::{Archived, Entries, EntryType},
-    Entry, Error, Result,
-};
+use crate::{archive::Archived, entry::EntryType, Entries, Entry, Error, Result};
 
 impl From<::zip::result::ZipError> for Error {
     fn from(value: ZipError) -> Self {

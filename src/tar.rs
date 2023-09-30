@@ -3,10 +3,7 @@ use std::{
     path::Path,
 };
 
-use crate::{
-    archive::{Archived, Entries, EntryType},
-    Entry, Result,
-};
+use crate::{archive::Archived, entry::EntryType, Entries, Entry, Result};
 
 struct TarEntries<'a, R: 'a + Read>(::tar::Entries<'a, R>);
 

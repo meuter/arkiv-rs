@@ -1,6 +1,7 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 mod archive;
+mod entry;
 mod format;
 mod result;
 
@@ -13,7 +14,8 @@ mod zip;
 #[cfg(feature = "tar")]
 mod tar;
 
-pub use archive::{Archive, Entries, Entry};
+pub use archive::Archive;
+pub use entry::{Entries, Entry};
 pub use format::Format;
 pub use result::{Error, Result};
 
