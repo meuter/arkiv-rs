@@ -1,10 +1,9 @@
+use ureq::Response;
+
 use crate::{archive::Storage, Archive};
 
 use super::{Error, Result};
-use std::{
-    fs::{create_dir_all, File},
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 /// URL is missing in [Downloader].
 pub struct UrlMissing;
@@ -106,33 +105,43 @@ impl<U> Downloader<U, DestMissing> {
 }
 
 impl Downloader<UrlProvided, DestProvided> {
-    /// Downloads the archive and opens it. Return an [Archive]. If the
-    /// the archive file was downloaded to a temporary directory, the file will
-    /// be deleted once the [Archive] is dropped.
-    pub fn download(self) -> Result<Archive> {
+    fn storage(&self) -> Result<Storage> {
         let file_name = Path::new(&self.url.0)
             .file_name()
             .ok_or(Error::InvalidUrl(self.url.0.clone()))?;
 
-        let response = ureq::get(&self.url.0)
-            .call()
-            .map_err(|err| Error::InvalidRequest(err.to_string()))?;
-        let mut source = response.into_reader();
-
-        let storage = match self.dest {
+        let storage = match &self.dest {
             DestProvided::TempDir => Storage::FileInTempDirectory {
                 temp: tempfile::tempdir()?,
                 file_name: file_name.to_os_string(),
             },
-            DestProvided::Dir(dir) => {
-                create_dir_all(&dir)?;
-                Storage::FileOnDisk {
-                    path: dir.join(file_name),
-                }
-            }
+            DestProvided::Dir(dir) => Storage::FileOnDisk {
+                path: dir.join(file_name),
+            },
         };
+        Ok(storage)
+    }
+}
 
-        let mut dest = File::create(storage.as_path())?;
+impl<D> Downloader<UrlProvided, D> {
+    fn get(&self) -> Result<Response> {
+        let response = ureq::get(&self.url.0)
+            .call()
+            .map_err(|err| Error::InvalidRequest(err.to_string()))?;
+        Ok(response)
+    }
+}
+
+impl Downloader<UrlProvided, DestProvided> {
+    /// Downloads the archive and opens it. Return an [Archive]. If the
+    /// the archive file was downloaded to a temporary directory, the file will
+    /// be deleted once the [Archive] is dropped.
+    pub fn download(self) -> Result<Archive> {
+        let response = self.get()?;
+        let storage = self.storage()?;
+
+        let mut source = response.into_reader();
+        let mut dest = storage.create()?;
 
         std::io::copy(&mut source, &mut dest)?;
 

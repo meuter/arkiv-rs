@@ -99,6 +99,14 @@ impl Storage {
             }
         }
     }
+
+    #[cfg(feature = "download")]
+    pub(crate) fn create(&self) -> Result<File> {
+        if let Storage::FileOnDisk { path } = self {
+            std::fs::create_dir_all(path)?;
+        }
+        Ok(File::create(self.as_path())?)
+    }
 }
 
 /// A collection of files, possibly compressed (e.g. `tar`, `tar.gz`, `zip`, ...).
