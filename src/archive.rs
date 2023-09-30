@@ -286,14 +286,9 @@ impl Archive {
     /// }
     /// ```
     pub fn entry_by_name(&mut self, entry_path: impl AsRef<Path>) -> Result<Entry> {
-        let entry_path = entry_path.as_ref();
-        for entry in self.entries_iter()? {
-            let entry = entry?;
-            if entry.path() == entry_path {
-                return Ok(entry);
-            }
-        }
-        Err(Error::FileNotFound)
+        self.find(|entry| entry.path() == entry_path.as_ref())?
+            .next()
+            .unwrap_or(Err(Error::FileNotFound))
     }
 
     /// Returns an iterator over the entries in the archive

@@ -20,6 +20,9 @@ fn test(path: impl AsRef<Path>) -> Result<()> {
     assert_eq!(entry.size(), 7);
     assert_eq!(entry.path(), Path::new("sample/sample.txt"));
 
+    let not_found = archive.entry_by_name("not_found.txt");
+    assert!(matches!(not_found, Err(arkiv::Error::FileNotFound)));
+
     Ok(())
 }
 
