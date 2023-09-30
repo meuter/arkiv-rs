@@ -34,9 +34,10 @@ pub enum DestProvided {
 /// ```no_run
 /// use arkiv::{Downloader, Result};
 ///
-/// pub fn toto() -> Result<()> {
+/// pub fn example() -> Result<()> {
+///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
 ///     let mut archive = Downloader::new()
-///         .url("https://getsamplefiles.com/download/zip/sample-1.zip")
+///         .url(url)
 ///         .to_temp()
 ///         .download()?;
 ///     archive.unpack("/path/to/unpacked")?;

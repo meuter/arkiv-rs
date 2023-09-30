@@ -173,7 +173,8 @@ impl Archive {
     /// ```no_run
     /// use arkiv::Archive;
     ///
-    /// let archive = Archive::download("https://getsamplefiles.com/download/zip/sample-1.zip");
+    ///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
+    /// let archive = Archive::download(url);
     /// ```
     ///
     #[cfg(feature = "download")]
