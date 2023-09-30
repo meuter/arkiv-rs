@@ -35,4 +35,4 @@ download = ["tempfile", "ureq"]
 [dev-dependencies]
 httptest = "0.15.4"
 tempfile = "3.8.0"
-tokio = { version = "1.32.0", features = ["tokio-macros", "full"] }
+tokio = { version = "1.32.0", features = ["macros"] }
