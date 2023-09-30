@@ -40,6 +40,11 @@ args = ["build", "--no-default-features", "-F", "bzip"]
 command = "cargo"
 args = ["build", "--no-default-features", "-F", "zstd"]
 
+[tasks.build-download-only]
+command = "cargo"
+args = ["build", "--no-default-features", "-F", "download"]
+
+
 [tasks.build]
 dependencies = [
     "build-default-features",
@@ -51,6 +56,7 @@ dependencies = [
     "build-xz-only",
     "build-bzip-only",
     "build-zstd-only",
+    "build-download-only",
 ]
 
 ###############################################################################
@@ -92,6 +98,10 @@ args = ["test", "--no-default-features", "-F", "bzip", "-F", "tar"]
 command = "cargo"
 args = ["test", "--no-default-features", "-F", "zstd", "-F", "tar"]
 
+[tasks.test-download-only]
+command = "cargo"
+args = ["test", "--no-default-features", "-F", "download", "-F", "tar"]
+
 [tasks.test]
 dependencies = [
     "test-default-features",
@@ -103,6 +113,7 @@ dependencies = [
     "test-xz-only",
     "test-bzip-only",
     "test-zstd-only",
+    "build-download-only",
 ]
 
 ###############################################################################
