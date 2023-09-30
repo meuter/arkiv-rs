@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::Result;
 
 /// The type of an entry within an archive.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum EntryType {
     /// The entry is a directory
     Directory,
@@ -17,7 +17,7 @@ pub(crate) enum EntryType {
 }
 
 /// A descriptor of one entry in an archive.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Entry {
     pub(crate) path: PathBuf,
     pub(crate) size: u64,
