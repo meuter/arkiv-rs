@@ -39,16 +39,15 @@ pub struct OnProgressProvided<F: FnMut(u64, u64)>(F);
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```
 /// use arkiv::{Downloader, Result};
 ///
-/// pub fn example() -> Result<()> {
+/// pub fn main() -> Result<()> {
 ///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
 ///     let mut archive = Downloader::new()
 ///         .url(url)
 ///         .to_temp()
 ///         .download()?;
-///     archive.unpack("/path/to/unpacked")?;
 ///     Ok(())
 /// }
 ///
@@ -140,9 +139,6 @@ impl<U, D> Downloader<U, D, OnProgressNotProvided> {
     ///     - the current number of bytes already downloaded
     ///     - the total number of bytes that needs to be downloaded
     ///
-    /// # Example
-    ///
-    ///
     pub fn on_progress<F>(self, callback: F) -> Downloader<U, D, OnProgressProvided<F>>
     where
         F: FnMut(u64, u64),
@@ -187,9 +183,27 @@ impl<D, O> Downloader<UrlProvided, D, O> {
 }
 
 impl Downloader<UrlProvided, DestProvided, OnProgressNotProvided> {
-    /// Downloads the archive and opens it. Return an [Archive]. If the
-    /// the archive file was downloaded to a temporary directory, the file will
-    /// be deleted once the [Archive] is dropped.
+    /// Downloads the archive without progress report.
+    ///
+    /// Downloads the archive specified by the URL, stores it to the
+    /// specified destination, opens it and returns the corresponding [Archive].
+    /// If the archive was downloaded to a temporary directory, this directory
+    /// will remain valid until the returned [Archive] is dropped.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use arkiv::{Downloader, Result};
+    ///
+    /// pub fn main() -> Result<()> {
+    ///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
+    ///     let mut archive = Downloader::new()
+    ///         .url(url)
+    ///         .to_temp()
+    ///         .download()?;
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn download(self) -> Result<Archive> {
         let response = self.get()?;
         let storage = self.storage()?;
@@ -204,11 +218,40 @@ impl Downloader<UrlProvided, DestProvided, OnProgressNotProvided> {
 }
 
 impl<F: FnMut(u64, u64)> Downloader<UrlProvided, DestProvided, OnProgressProvided<F>> {
-    /// Downloads the archive and opens it. Return an [Archive]. If the
-    /// the archive file was downloaded to a temporary directory, the file will
-    /// be deleted once the [Archive] is dropped.
+    /// Downloads the archive and reports on progress.
     ///
-    /// During the download the provided progress callback will be called.
+    /// Downloads the archive specified by the URL, stores it to the
+    /// specified destination, opens it and returns the corresponding [Archive].
+    /// During the download, the registered progress callback will be called
+    /// regularly.
+    /// If the archive was downloaded to a temporary directory, this directory
+    /// will remain valid until the returned [Archive] is dropped.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use arkiv::{Downloader, Result};
+    ///
+    /// pub fn main() -> Result<()> {
+    ///     let mut callbacks: Vec<(u64, u64)> = vec![];
+    ///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
+    ///     let mut archive = Downloader::new()
+    ///         .on_progress(|current, total| callbacks.push((current, total)))
+    ///         .url(url)
+    ///         .to_temp()
+    ///         .download()?;
+    ///
+    ///     let filesize = std::fs::metadata(archive.path()).unwrap().len();
+    ///
+    ///     // the callback is called at least once at the start of download
+    ///     assert!(callbacks.first().unwrap() == &(0, filesize));
+    ///
+    ///     // and also at the end of the download
+    ///     assert!(callbacks.last().unwrap() == &(filesize, filesize));
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn download(mut self) -> Result<Archive> {
         let response = self.get()?;
         let content_length = response
