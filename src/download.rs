@@ -8,16 +8,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// URL is missing in [Downloader].
+/// URL is missing in [`Downloader`].
 pub struct UrlMissing;
 
-/// URL is provided in [Downloader].
+/// URL is provided in [`Downloader`].
 pub struct UrlProvided(String);
 
-/// Download destination is missing in [Downloader].
+/// Download destination is missing in [`Downloader`].
 pub struct DestMissing;
 
-/// Download destination is provided in [Downloader].
+/// Download destination is provided in [`Downloader`].
 pub enum DestProvided {
     /// Archive file will be downloaded in a temporary directory.
     TempDir,
@@ -26,14 +26,17 @@ pub enum DestProvided {
     Dir(PathBuf),
 }
 
-/// Progress callback is not provided in [Downloader]
+/// Progress callback is not provided in [`Downloader`]
 pub struct OnProgressNotProvided;
 
-/// Progress callback is provided in [Downloader]
+/// Progress callback is provided in [`Downloader`]
 pub struct OnProgressProvided<F: FnMut(u64, u64)>(F);
 
-/// Allows to download an archive file and open it. This struct
-/// provides a bit more flexibility compared to [Archive::download]
+/// Allows to download an archive file and open it.
+///
+/// This struct provides a bit more flexibility compared
+/// to [`Archive::download`] like e.g. specifying the destination
+/// directory or providing a progress callback.
 ///
 /// This type is only available if the `download` feature is enabled.
 ///
@@ -59,7 +62,7 @@ pub struct Downloader<U, D, O> {
 }
 
 impl Downloader<UrlMissing, DestMissing, OnProgressNotProvided> {
-    /// Returns a new `Downloader`.
+    /// Returns a new [`Downloader`].
     pub fn new() -> Self {
         Self::default()
     }
@@ -112,8 +115,6 @@ impl<U, O> Downloader<U, DestMissing, O> {
     /// in the specified destination directory. If this directory does not
     /// exists, it will be created when the archive is downloaded.
     ///
-    /// See [Downloader::download]
-    ///
     /// # Arguments
     /// - `dest`: the destination directory.
     ///
@@ -131,13 +132,20 @@ impl<U, O> Downloader<U, DestMissing, O> {
 
 impl<U, D> Downloader<U, D, OnProgressNotProvided> {
     /// Sets a callback that will be regularily called during the download to
-    /// nonitor the progress.
+    /// nonitor the progress. During the download operation, this callback
+    /// will at least be called twice:
+    /// - once when the download starts
+    /// - once when the download is finished
     ///
     /// # Arguments
     ///
     /// - `callback`: closure that will be called with two values:
     ///     - the current number of bytes already downloaded
     ///     - the total number of bytes that needs to be downloaded
+    ///
+    /// # Example
+    ///
+    /// see [`download`](Downloader#method.download-1)
     ///
     pub fn on_progress<F>(self, callback: F) -> Downloader<U, D, OnProgressProvided<F>>
     where
@@ -186,9 +194,9 @@ impl Downloader<UrlProvided, DestProvided, OnProgressNotProvided> {
     /// Downloads the archive without progress report.
     ///
     /// Downloads the archive specified by the URL, stores it to the
-    /// specified destination, opens it and returns the corresponding [Archive].
+    /// specified destination, opens it and returns the corresponding [`Archive`].
     /// If the archive was downloaded to a temporary directory, this directory
-    /// will remain valid until the returned [Archive] is dropped.
+    /// will remain valid until the returned [`Archive`] is dropped.
     ///
     /// # Example
     ///
@@ -221,11 +229,11 @@ impl<F: FnMut(u64, u64)> Downloader<UrlProvided, DestProvided, OnProgressProvide
     /// Downloads the archive and reports on progress.
     ///
     /// Downloads the archive specified by the URL, stores it to the
-    /// specified destination, opens it and returns the corresponding [Archive].
+    /// specified destination, opens it and returns the corresponding [`Archive`].
     /// During the download, the registered progress callback will be called
     /// regularly.
     /// If the archive was downloaded to a temporary directory, this directory
-    /// will remain valid until the returned [Archive] is dropped.
+    /// will remain valid until the returned [`Archive`] is dropped.
     ///
     /// # Example
     ///

@@ -145,7 +145,7 @@ impl Archive {
     /// Opens an archive stored on the filesystem.
     ///
     /// The format of the archive will be inferred from the file
-    /// extension. See [infer_from_file_extension](Format::infer_from_file_extension).
+    /// extension. See [`infer_from_file_extension`](Format::infer_from_file_extension).
     ///
     /// # Arguments:
     ///
@@ -169,7 +169,7 @@ impl Archive {
     ///
     /// This function is only available if the `download` feature is enabled.
     ///
-    /// This function is a simple convenience wrapper around the [Downloader](crate::Downloader),
+    /// This function is a simple convenience wrapper around the [`Downloader`](crate::Downloader),
     /// which provides more features.
     ///
     /// # Arguments:
@@ -181,7 +181,7 @@ impl Archive {
     /// ```no_run
     /// use arkiv::Archive;
     ///
-    ///     let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
+    /// let url = "https://github.com/meuter/arkiv-rs/raw/main/tests/sample/sample.zip";
     /// let archive = Archive::download(url);
     /// ```
     ///
@@ -242,7 +242,7 @@ impl Archive {
     /// For convenience, these entries are returned as an already
     /// collected `Vec<String>`. If the archive contains a large
     /// number of files, the amount of memory required to store
-    /// these entries might be large. See [Archive::entries_iter]
+    /// these entries might be large. See [`entries_iter`](Self::entries_iter)
     /// for an iterator version.
     ///
     /// # Example
@@ -319,6 +319,8 @@ impl Archive {
     /// # Arguments
     ///
     /// - `entry_path`: the path of the enty to look up
+    ///
+    /// # Example
     ///
     /// ```no_run
     /// use arkiv::{Archive, Result};
