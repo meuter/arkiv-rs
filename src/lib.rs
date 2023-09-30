@@ -15,7 +15,7 @@ mod zip;
 mod tar;
 
 pub use archive::Archive;
-pub use entry::{Entries, Entry};
+pub use entry::{Entries, Entry, FindEntries};
 pub use format::Format;
 pub use result::{Error, Result};
 

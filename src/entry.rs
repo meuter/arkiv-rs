@@ -48,3 +48,26 @@ impl Entry {
 
 /// An iterator over the entries of the archive
 pub type Entries<'a> = Box<dyn 'a + Iterator<Item = Result<Entry>>>;
+
+/// An iterator over entries matching a given boolean predicate
+pub struct FindEntries<'a, P: FnMut(&Entry) -> bool> {
+    pub(crate) predicate: P,
+    pub(crate) inner: Entries<'a>,
+}
+
+impl<'a, P: FnMut(&Entry) -> bool> Iterator for FindEntries<'a, P> {
+    type Item = Result<Entry>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.inner.next()? {
+                Ok(entry) => {
+                    if (self.predicate)(&entry) {
+                        return Some(Ok(entry));
+                    }
+                }
+                Err(err) => return Some(Err(err)),
+            }
+        }
+    }
+}

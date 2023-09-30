@@ -22,7 +22,7 @@ use xz2::read::XzDecoder;
 #[cfg(all(feature = "tar", feature = "zstd"))]
 use zstd::stream::Decoder as ZstdDecoder;
 
-use crate::{Entries, Entry, Error, Format, Result};
+use crate::{Entries, Entry, Error, FindEntries, Format, Result};
 
 /// private interface for an archive backend (zip or archive)
 pub(crate) trait Archived {
@@ -294,5 +294,35 @@ impl Archive {
             }
         }
         Err(Error::FileNotFound)
+    }
+
+    /// Returns an iterator over the entries in the archive
+    /// that match a given boolean predicate.
+    ///
+    /// # Arguments
+    ///
+    /// - `predicate`: a boolean predicate on `Entry`
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use arkiv::{Archive, Result};
+    ///
+    /// fn main() -> Result<()> {
+    ///     let mut archive = Archive::open("path/to/archive.tgz")?;
+    ///
+    ///     // iterate over all the files in the archive
+    ///     for entry in archive.find(|entry| entry.is_file())? {
+    ///         let entry = entry?;
+    ///         print!("{}", entry.path().display());
+    ///     }
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn find<P: FnMut(&Entry) -> bool>(&mut self, predicate: P) -> Result<FindEntries<P>> {
+        Ok(FindEntries {
+            predicate,
+            inner: self.entries_iter()?,
+        })
     }
 }
