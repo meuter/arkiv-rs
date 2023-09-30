@@ -18,10 +18,7 @@ pub use format::Format;
 pub use result::{Error, Result};
 
 #[cfg(feature = "download")]
-pub use download::{
-    DestMissing, DestProvided, Downloader, OnProgressNotProvided, OnProgressProvided, UrlMissing,
-    UrlProvided,
-};
+pub use download::Downloader;
 
 /// Available archive file formats.
 #[allow(deprecated)]
