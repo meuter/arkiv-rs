@@ -19,12 +19,18 @@ pub(crate) enum EntryType {
 /// A descriptor of one entry in an archive.
 #[derive(Debug, Clone)]
 pub struct Entry {
+    pub(crate) index: usize,
     pub(crate) path: PathBuf,
     pub(crate) size: u64,
     pub(crate) entry_type: EntryType,
 }
 
 impl Entry {
+    /// Returns the index of the entry within the archive
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
     /// Returns the path of the entry
     pub fn path(&self) -> &Path {
         &self.path

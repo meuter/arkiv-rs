@@ -1,5 +1,6 @@
 use std::{
-    io::{Read, Seek},
+    fs::{create_dir_all, set_permissions, File, Permissions},
+    io::{self, Read, Seek},
     path::Path,
 };
 
@@ -35,7 +36,7 @@ where
     type Item = Result<Entry>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        fn convert(zip_file: ZipResult<ZipFile>) -> Result<Entry> {
+        fn convert(index: usize, zip_file: ZipResult<ZipFile>) -> Result<Entry> {
             let zip_file = zip_file?;
             let path = zip_file
                 .enclosed_name()
@@ -48,6 +49,7 @@ where
                 EntryType::File
             };
             let entry = Entry {
+                index,
                 path,
                 size,
                 entry_type,
@@ -58,7 +60,7 @@ where
         if self.index < self.archive.len() {
             let index = self.index;
             self.index += 1;
-            Some(convert(self.archive.by_index(index)))
+            Some(convert(index, self.archive.by_index(index)))
         } else {
             None
         }
@@ -75,5 +77,31 @@ impl<R: Read + Seek> Archived for ZipArchive<R> {
         let index = 0;
         let zip_entries = ZipEntries { archive, index };
         Ok(Box::new(zip_entries))
+    }
+
+    fn unpack_entry(&mut self, entry: &Entry, dest: &Path) -> Result<()> {
+        let outpath = dest.join(entry.path());
+        if entry.is_dir() {
+            create_dir_all(&outpath)?;
+        } else if entry.is_file() {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    create_dir_all(p)?;
+                }
+            }
+            let mut file_in_zip = self.by_index(entry.index())?;
+            let mut outfile = File::create(&outpath)?;
+            io::copy(&mut file_in_zip, &mut outfile)?;
+
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Some(mode) = file_in_zip.unix_mode() {
+                    set_permissions(&outpath, Permissions::from_mode(mode))?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }

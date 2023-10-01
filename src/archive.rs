@@ -28,6 +28,7 @@ use crate::{Entries, Entry, Error, FindEntries, Format, Result};
 pub(crate) trait Archived {
     fn unpack(&mut self, dest: &Path) -> Result<()>;
     fn entries(&mut self) -> Result<Entries>;
+    fn unpack_entry(&mut self, entry: &Entry, dest: &Path) -> Result<()>;
 }
 
 #[derive(Debug)]
@@ -319,5 +320,41 @@ impl Archive {
             predicate,
             inner: self.entries_iter()?,
         })
+    }
+
+    /// Extracts an entry to the provided destination directory.
+    ///
+    /// If the entry is a directory, the corresponding directory
+    /// will be created in the destination folder.
+    ///
+    /// If the entry is a file, the contents of the file will be extracted
+    /// and stored in at the same path as the enty, but relative to the
+    /// destination directory.
+    ///
+    /// The destination directory and ann intermediate directory to it
+    /// will be created as necessary.
+    ///
+    /// # Arguments
+    ///
+    /// - `entry`: the entry to extract
+    /// - `dest`: path to a directory where the entry will be extracted.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use arkiv::{Archive, Result};
+    /// use std::fs::read_to_string;
+    //
+    /// fn main() -> Result<()> {
+    ///    let mut archive = Archive::open("path/to/archive.tgz")?;
+    ///    let some_file = archive.entry_by_name("some/file/in/archive.txt")?;
+    ///    archive.unpack_entry(&some_file, "/tmp/extracted")?;
+    ///
+    ///    let some_file_contents = read_to_string("/tmp/extracted/file/in/archive.txt")?;
+    ///    Ok(())
+    /// }
+    /// ```
+    pub fn unpack_entry(&mut self, entry: &Entry, dest: impl AsRef<Path>) -> Result<()> {
+        self.archived()?.unpack_entry(entry, dest.as_ref())
     }
 }
